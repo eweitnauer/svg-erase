@@ -1,0 +1,90 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SVG Eraser Algorithm</title>
+<script src="d3.min.js"></script>
+<script src="mtouch-events.js"></script>
+<script src="erase.js"></script>
+<body>
+<script>
+
+var width = 960
+   ,height = 500
+   ,eraser_radius = 20
+   ,stroke_width = 3
+   ,line = d3.svg.line()
+   ,paths = []
+   ,erase_path = {};
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style("border", "1px solid silver");
+
+var mtouch = mtouch_events()
+  .on('touch', touch)
+	.on('drag', drag)
+	.on('release', release);
+
+var g_paths = svg.append('g')
+  	.attr('id', 'paths');
+var overlay = svg.append('rect')
+    .style({fill: 'none', 'pointer-events': 'all'})
+    .attr("width", width)
+    .attr("height", height)
+    .call(mtouch);
+var g_erase = svg.append('g')
+    .attr('id', 'erase');
+
+mtouch.frame(overlay.node());
+
+function touch() {
+	var f = d3.event.finger;
+	erase_path.data = [f.pos0.slice()];
+	if (!erase_path.el) {
+		erase_path.el = g_erase.append('path')
+	                   .style('fill', 'none')
+	                   .style('stroke', 'gray')
+	                   .style('opacity', 0.3)
+	                   .style('stroke-width', eraser_radius*2)
+	                   .style('stroke-linecap', 'round')
+	                   .style('stroke-linejoin', 'round');
+	}
+	erase_path.el.datum(erase_path.data)
+	             .attr('d', function(d) { return line(d) + 'Z'});
+}
+
+function drag() {
+	var f = d3.event.finger;
+	erase_path.data.push(f.pos.slice());
+	erase_path.el.attr('d', line);
+}
+
+function release() {
+	paths = erase(paths, erase_path.data);
+	update(paths);
+}
+
+function update(paths) {
+	var p = g_paths.selectAll('path')
+	  .data(paths);
+
+	p.enter()
+	 .append('path')
+	 .style('fill', 'none')
+	 .style('stroke', '#444')
+	 .style('stroke-width', stroke_width)
+	 .style('stroke-linecap', 'round')
+	 .style('stroke-linejoin', 'round');
+
+	p.attr('d', line);
+
+	p.exit().remove();
+}
+
+paths.push([[20,20], [300,300]]);
+paths.push([[100,50], [300,50]]);
+paths.push([[50,100], [50,300]]);
+paths.push([[727,152],[727,151],[725,150],[721,148],[713,144],[704,140],[692,137],[678,135],[667,134],[656,134],[646,134],[635,137],[625,142],[615,148],[603,159],[594,170],[585,181],[582,193],[577,210],[572,232],[567,266],[563,296],[563,319],[567,338],[573,353],[582,367],[591,377],[601,390],[615,398],[628,406],[642,411],[660,415],[677,417],[692,417],[707,417],[724,413],[743,407],[758,399],[769,388],[775,378],[781,365],[785,351],[790,335],[794,323],[794,312],[794,302],[791,293],[786,283],[782,276],[776,270],[771,264],[763,261],[750,256],[731,252],[713,244],[693,240],[670,238],[650,237],[638,237],[628,239],[621,244],[616,249],[611,257],[604,267],[601,277],[598,288],[598,301],[598,317],[601,333],[608,345],[619,361],[630,371],[639,381],[648,388],[656,393],[666,397],[673,398],[684,399],[696,400],[705,399],[716,393],[724,386],[730,378],[734,370],[737,363],[737,357],[737,350],[737,341],[734,335],[728,327],[723,324],[715,321],[709,320],[700,320],[693,320],[685,321],[678,324],[672,326],[667,328],[666,329],[666,330]]);
+update(paths);
+
+</script>
