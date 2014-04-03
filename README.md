@@ -3,7 +3,8 @@ svg-erase
 
 An eraser tool for SVG written in javascript.
 
-The main method is in erase.js. It will handle polylines for the drawings and a polyline with a radius for the eraser path. Open the index.html file in your browser and drag with your mouse / finger on the svg to see it in action!
+The main method is in erase.js. It will handle polylines for the drawings and a polyline with a radius for the eraser path.
 
+Clone to your computer, open the index.html file in your browser and drag with your mouse / finger on the svg to see it in action!
 
 Uses the great [d3.js](https://github.com/mbostock/d3) library from Mike Bostock.
