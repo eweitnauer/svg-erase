@@ -12,90 +12,302 @@
 	It's the same as half of the stroke width. We will assume for now that the stroke width
 	/ radius of the actual paths that are to be erased is zero.
 */
-function erase(paths, erase_path, erase_radius) {
 
+function erase(paths, erase_path, erase_radius) {
+	//erase_radius = 10;
 	// The code should iterate over all paths and then call a method that deals with a
 	// single path and the erase_path. Inside that method, we need to iterate over all
-  // line segments of the path paired with all line segments of the erase_path and
-  // call a method for each that handles intersecting two lines (or rather, a line with
-  // a line that has a radius == a capsule).
-  
-  // Facts:
-  // - because we iterate over each path in "paths," we do not have to follow paths
-  // - a path segment will either: not be in erase zone, enter erase zone, cross erase zone, or be completely inside erase zone
-  // The least amount of data needed to account for these cases is: ...
-  // - line segments parallel to each erase segment on both sides
-  
-  // Cases to consider:
-  // - path which is a single point: calculate distance to each erase_path, if within, delete
-  // - path of finite length:
-  //   - path is within erase_radius of an erase_path, but does not intersect path or border
-  //   - path crosses one or more of: erase_path, erase_path border
-  
-  // put the following on hold for a second...
-  // My idea is this:
-  // for each segment of erase_path, calculate the lines parallel to each, as determined by erase_radius
-  // for the endpoints of erase_path, calculate the circle surrounding it as determined by erase_radius
-  // for each path
-	/*
-	for ( var i = 0; i < (erase_path.length - 1); i++ ) {
-		document.write( erase_path[i][0] + " " );
-	}
-	*/
-	/*
-	for ( var i = 0; i < (erase_path.length - 1); i++ ) {
-		var dist = Math.sqrt( Math.pow( (erase_path[i+1][0] - erase_path[i][0]), 2 ) + Math.pow( (erase_path[i+1][1] - erase_path[i][1]), 2 ) );
-		document.write( erase_path[i][0] + " " + erase_path[i][1] + " " + dist + "<br />" );
-	}
-	*/
+	// line segments of the path paired with all line segments of the erase_path and
+	// call a method for each that handles intersecting two lines (or rather, a line with
+	// a line that has a radius == a capsule).
+    
+	//document.write( paths );
+	//document.write( erase_radius );
 	var new_paths = [];
-	for (
+	
+	var handle_point_erase = function(path) {
+		
+		var i = 0;
+		var last = 0;
+	
+		// handle point path
+		if ( path.length === 1 ) {
+			if ( !within_circle( path[0][0], path[0][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+				new_paths.push( path );
+				return;
+			}
+		}
+		
+		while ( i < (path.length - 1) ) {
+		
+			if ( within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
+				 within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+				i++;
+				last = i;
+			}
+			else if ( within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
+					  !within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+				var x = get_circle_intersection( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
+				path[i] = x;
+				last = i;
+			}
+			else if ( !within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
+					  within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+				var x = get_circle_intersection( path[i+1][0], path[i+1][1], path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius );
+				//new_paths.push( path.slice( last, i+1 ).push( x ) );
+				new_paths.push( get_elements( path, last, i+1 ).push( x ) );
+				i++;
+				last = i;
+			}
+			else {
+				var poss_intersects = get_circle_intersections( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
+				if ( poss_intersects ) {
+					//new_paths.push( path.slice( last, i+1 ).push( poss_intersects[0] ) );
+					new_paths.push( get_elements( path, last, i+1 ).push( poss_intersects[0] ) );
+					path[i] = poss_intersects[1];
+					last = i;
+				}
+				else {
+					i++;
+				}
+			}
+		}
+		if ( last !== i ) 
+			//new_paths.push( path.slice( last, path.length ) );
+			new_paths.push( get_elements( path, last, path.length ) );
+		
+	} // end handle_point_erase
+	
+	var handle_capsule_erase = function(path, i) {
+		var e0 = erase_path[i];
+		var e1 = erase_path[i+1];
+		
+		var i = 0;
+		var last = 0;
+		
+		// handle point path
+		if ( path.length === 1 ) {
+			var code = within_capsule( path[0][0], path[0][1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+			if ( code.indexOf( 1 ) !== -1 ) {
+				new_paths.push( path );
+				return;
+			}
+		}
+		
+		while ( i < (path.length - 1) ) {
+			var p0 = path[i];
+			var p1 = path[i+1];
+			var code0 = within_capsule( p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+			var code1 = within_capsule( p1[0], p1[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+			
+			if ( code0.indexOf( 1 ) !== -1 && code1.indexOf( 1 ) !== -1 ) {
+				i++;
+				last = i;
+			}
+			else if ( code0.indexOf( 1 ) !== -1 && code1.indexOf( 1 ) === -1 ) {
+				var x = get_capsule_intersection( p0[0], p0[1], code0, p1[0], p1[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+				path[i] = x;
+				last = i;
+			}
+			else if ( code0.indexOf( 1 ) === -1 && code1.indexOf( 1 ) !== -1 ) {
+				var x = get_capsule_intersection( p1[0], p1[0], code1, p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+				//new_paths.push( path.splice( last, i+1 ).push( x ) );
+				new_paths.push( get_elements( path, last, i+1 ).push( x ) );
+				i++;
+				last = i;
+			}
+			else {
+				var poss_intersects = get_capsule_intersections( p0[0], p0[1], p1[0], p1[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+				if ( poss_intersects ) {
+					//new_paths.push( path.slice( last, i+1 ).push( poss_intersects[0] ) );
+					new_paths.push( get_elements( path, last, i+1 ).push( poss_intersects[0] ) );
+					path[i] = poss_intersects[1];
+					last = i;
+				}
+				else {
+					i++;
+				}
+			}
+		}
+		if ( last !== i ) 
+			//new_paths.push( path.slice( last, path.length ) );
+			new_paths.push( get_elements( path, last, path.length ) );
+		
+	} // end handle_capsule_erase
+	//document.write( "<br />check" );
+	if ( erase_path.length === 1 ) {
+		for ( var p = 0; p < paths.length; p++ ) {
+			handle_point_erase( paths[p] );
+		}
+	}
+	else {
+		for ( var e = 0; e < (erase_path.length - 1); e++ ) {
+			for ( var p = 0; p < paths.length; p++ ) {
+				//document.write( paths[p] );
+				handle_capsule_erase( paths[p], e );
+			}
+			paths = new_paths;
+			new_paths = [];
+		}
+	}
+	//document.write( "<br />check" );
+	//document.write( "<br /><br />" + paths );
 	return paths;
+} // end erase
+
+/* Helper functions:
+*  get_distance (p0_x, p0_y, p1_x, p1_y)
+*  within_circle (x, y, c_x, c_y, r)
+*  within_box (p_x, p_y, a_x, a_y, b_x, b_y, r)
+*  within_capsule (p_x, p_y, a_x, a_y, b_x, b_y, r)
+*  get_parallel_segments (a_x, a_y, b_x, b_y, r)
+*  get_cirle_intersection (a_x, a_y, b_x, b_y, c_x, c_y, r)
+*  get_circle_intersections (a_x, a_y, b_x, b_y, c_x, c_y, r)
+*  get_line_intersection (p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y)
+*  get_capsule_intersection (p0_x, p0_y, code, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r)
+*  get_capsule_intersections (p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r)
+*/
+
+function get_elements (arr, begin, end) {
+	var elements = [];
+	for ( var n = begin; n < end; n++ ) {
+		elements.push( arr[n] );
+	}
+}
+
+function get_distance (p0_x, p0_y, p1_x, p1_y) {
+	return ( Math.sqrt( Math.pow( (p1_x - p0_x), 2 ) + Math.pow( (p1_y - p0_y), 2 ) ) );
 }
 
 /*
-* Takes the x and y coordinates of two points, representing a line segment.
-* Takes the erase_radius (half the height of the box).
-* Returns an array containing the four point coordinate-pairs that represent the vertices of the box.
+* Takes x, y: the point in question
+* Takes c_x, c_y: the center of the circle
+* Takes r: the radius of the circle
+* Returns 0 or 1: 0 if the point is outside the circle, 1 if within
 */
-function getBox (p0_x, p0_y, p1_x, p1_y, erase_radius) {
+function within_circle (x, y, c_x, c_y, r) {
+	var dist = Math.sqrt( Math.pow((x - c_x), 2) + Math.pow((y - c_y), 2) );
+	if ( dist < r ) return 1;
+	else return 0;
+}
 
-	var vec_v = [(p1_x - p0_x), (p1_y - p0_y)];
+/*
+* Takes p_x, p_y: the point in question
+* Takes a_x, a_y, b_x, b_y: the components of the points that define the line segment
+* Takes r: the "erase_radius"
+* Returns 0 or 1: 0 if the point is outside the box, 1 if within
+*/
+function within_box (p_x, p_y, a_x, a_y, b_x, b_y, r) {
+
+	// vectors
+	var vec_ab = [ (b_x - a_x), (b_y - a_y) ];
+	var vec_ap = [ (p_x - a_x), (p_y - a_y) ];
+	
+	// tools for calculating projections
+	var vec_n    = [ -vec_ab[1], vec_ab[0] ];
+	var mag_n    = Math.sqrt( Math.pow( vec_n[0], 2 ) + Math.pow( vec_n[1], 2 ) );
+	var u_vec_n  = [vec_n[0]/mag_n, vec_n[1]/mag_n];
+	var mag_ab   = Math.sqrt( Math.pow( vec_ab[0], 2 ) + Math.pow( vec_ab[1], 2 ) );
+	var u_vec_ab = [vec_ab[0]/mag_ab, vec_ab[1]/mag_ab];
+	
+	var ap_proj_ab = vec_ap[0]*u_vec_ab[0] + vec_ap[1]*u_vec_ab[1];
+	if ( ap_proj_ab <= 0 || ap_proj_ab >= mag_ab ) return 0;
+	
+	var ap_proj_n = vec_ap[0]*u_vec_n[0] + vec_ap[1]*u_vec_n[1];
+	if ( ap_proj_n >= r || ap_proj_n <= -r ) return 0;
+	
+	return 1;
+}
+
+/*
+* Takes p_x, p_y: the point in question
+* Takes a_x, a_y, b_x, b_y: the components of the points that define the line segment
+* Takes r: the "erase_radius"
+* Returns 0 or 1: 0 if the point is outside the capsule, 1 if within
+*/
+function within_capsule (p_x, p_y, a_x, a_y, b_x, b_y, r) {
+	
+	var space_code = [];
+	space_code.push( within_circle( p_x, p_y, a_x, a_y, r ) );
+	space_code.push( within_circle( p_x, p_y, b_x, b_y, r ) );
+	space_code.push( within_box( p_x, p_y, a_x, a_y, b_x, b_y, r ) );
+	return space_code;
+	
+}
+
+/*
+* Takes a_x, a_y, b_x, b_y: the points that define a line segment
+* Takes r: the "erase_radius"
+* Returns an array of arrays: the points that define a box around that line segment.  Length: mag_ab, width: r.
+*/
+function get_parallel_segments (a_x, a_y, b_x, b_y, r) {
+
+	var vec_v = [(b_x - a_x), (b_y - a_y)];
 	var vec_n = [-vec_v[1], vec_v[0]];
 	var mag_n = Math.sqrt( Math.pow( vec_n[0], 2 ) + Math.pow( vec_n[1], 2 ) );
 	var u_vec_n = [vec_n[0]/mag_n, vec_n[1]/mag_n];
 	
-	var b0 = [(p0_x + erase_radius*u_vec_n[0]), (p0_y + erase_radius*u_vec_n[1])];
-	var b1 = [(p0_x - erase_radius*u_vec_n[0]), (p0_y - erase_radius*u_vec_n[1])];
-	var b2 = [(p1_x - erase_radius*u_vec_n[0]), (p1_y - erase_radius*u_vec_n[1])];
-	var b3 = [(p1_x + erase_radius*u_vec_n[0]), (p1_y + erase_radius*u_vec_n[1])];
-	
+	var b0 = [(a_x + r*u_vec_n[0]), (a_y + r*u_vec_n[1])];
+	var b1 = [(a_x - r*u_vec_n[0]), (a_y - r*u_vec_n[1])];
+	var b2 = [(b_x - r*u_vec_n[0]), (b_y - r*u_vec_n[1])];
+	var b3 = [(b_x + r*u_vec_n[0]), (b_y + r*u_vec_n[1])];
+
 	return [b0, b1, b2, b3];
 }
 
 /*
-* Takes the x and y coordinates of a point, and the x and y coordinates of a line segment.
-* Returns 1 if the point is on the left side of the line, 0 otherwise.
+* Takes a_x, a_y: the coordinates of the point inside the circle
+* Takes b_x, b_y: the coordinates of the point outside the circle
+* Takes c_x, c_y: the center point of the circle
+* Takes r: the radius of the circle
+* Returns an array: the x and y coordinates of the intersection between the line segment ab and the circle.
 */
-function is_left (x, y, p0_x, p0_y, p1_x, p1_y) {
+function get_cirle_intersection (a_x, a_y, b_x, b_y, c_x, c_y, r) {
+	
+	var vec_ac = [ (c_x - a_x), (c_y - a_y) ];
+	var vec_ab = [ (b_x - a_x), (b_y - a_y) ];
+	
+	var mag_ab = Math.sqrt( Math.pow( vec_ab[0], 2 ) + Math.pow( vec_ab[1], 2 ) );
+	var u_vec_ab = [ (vec_ab[0]/mag_ab), (vec_ab[1]/mag_ab) ];
+	var ac_proj_ab = vec_ac[0]*u_vec_ab[0] + vec_ac[1]*u_vec_ab[1];
+	
+	var right_point = [ (a_x + ac_proj_ab*u_vec_ab[0]), (a_y + ac_proj_ab*u_vec_ab[1]) ];
+	var dist_c_to_right_point = Math.sqrt( Math.pow( (c_x - right_point[0]), 2 ) + Math.pow( (c_y - right_point[1]), 2) );
+	var b = Math.pow( r, 2 ) - Math.pow( dist_c_to_right_point, 2 );
+	
+	var intersection = [ (a_x + ac_proj_ab*u_vec_ab[0] + b*u_vec_ab[0]), (a_x + ac_proj_ab*u_vec_ab[1] + b*u_vec_ab[1]) ];
+	return intersection;
+}
 
-	var vec_v = [(p1_x - p0_x), (p1_y - p0_y)];
-	var vec_n = [-vec_v[1], vec_v[0]];
+function get_circle_intersections (a_x, a_y, b_x, b_y, c_x, c_y, r) {
+	
+	var vec_ac = [ (c_x - a_x), (c_y - a_y) ];
+	var vec_ab = [ (b_x - a_x), (b_y - a_y) ];
+	
+	var vec_n = [ -vec_ab[1], vec_ab[0] ];
 	var mag_n = Math.sqrt( Math.pow( vec_n[0], 2 ) + Math.pow( vec_n[1], 2 ) );
 	var u_vec_n = [vec_n[0]/mag_n, vec_n[1]/mag_n];
-	var vec = [x-vec_v[0], y-vec_v[1]];
-	var h = u_vec_n[0]*vec[0] + u_vec_n[1]*vec[1];
 	
-	if (h > 0) return 1;
-	else return 0;
+	var mag_d = vec_ac[0]*u_vec_n[0] + vec_ac[1]*u_vec_n[1];
+	if ( mag_d >= r ) return null;
+	
+	var x = Math.pow( r, 2 ) - Math.pow( mag_d, 2 );
+	var vec_cd = [ (c_x - mag_d*u_vec_n[0]), (c_y - mag_d*u_vec_n[1]) ];
+	
+	var mag_ab = Math.sqrt( Math.pow( vec_ab[0], 2 ) + Math.pow( vec_ab[1], 2 ) );
+	var u_vec_ab = [ (vec_ab[0]/mag_ab), (vec_ab[1]/mag_ab) ];
+	
+	var intersections = [ [(vec_cd[0] + u_vec_ab[0]*x), (vec_cd[1] + u_vec_ab[1]*x)], [(vec_cd[0] - u_vec_ab[0]*x), (vec_cd[1] - u_vec_ab[1]*x)] ];
+	return intersections;
 }
+
 /*
 * Takes the points that represent two line segments:
 * 	p0 and p1 are line segment 1, p2 and p3 are line segment 2.
 * Returns null if the line segments do not intersect.
 * Returns the coordinate-pair of the intersection if it exists.
 */
-function getLineIntersection (p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y) { 
+function get_line_intersection (p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y) { 
 
 	var s1_x, s1_y, s2_x, s2_y; 
 	s1_x = p1_x - p0_x;
@@ -104,6 +316,7 @@ function getLineIntersection (p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y) {
 	s2_y = p3_y - p2_y; 
 
 	var s, t;
+	if ( (-s2_x * s1_y + s1_x * s2_y) === 0 ) return null;
 	s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y); 
 	t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 	
@@ -117,7 +330,89 @@ function getLineIntersection (p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y) {
 
 }
 
+/*
+* Use this when p0 is in the capsule and p1 isn't.  Pass in p0's code.
+*
+*/
+function get_capsule_intersection (p0_x, p0_y, code, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r) {
 
+	var box = get_parallel_segments( c0_x, c0_y, c1_x, c1_y, r );
+	var intersections = [];
 	
+	if ( code[0] && !code[1] ) {
+		intersections.push( get_circle_intersection( p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, r ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[0][0], box[0][1], box[3][0], box[3][1] ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[1][0], box[1][1], box[2][0], box[2][1] ) );
+		var i = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c1_x, c1_y, r );
+		if ( i ) intersections.push( i[0], i[1] );
+	}
+	else if ( !code[0] && code[1] ) {
+		intersections.push( get_circle_intersection( p0_x, p0_y, p1_x, p1_y, c1_x, c1_y, r ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[0][0], box[0][1], box[3][0], box[3][1] ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[1][0], box[1][1], box[2][0], box[2][1] ) );
+		var i = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, r );
+		if ( i ) intersections.push( i[0], i[1] );
+	}
+	else if ( code[0] && code[1] ) {
+		intersections.push( get_circle_intersection( p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, r ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[0][0], box[0][1], box[3][0], box[3][1] ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[1][0], box[1][1], box[2][0], box[2][1] ) );
+		intersections.push( get_circle_intersection( p0_x, p0_y, p1_x, p1_y, c1_x, c1_y, r ) );
+	}
+	else {
+		var i = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c1_x, c1_y, r );
+		var j = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, r );
+		if ( i ) intersections.push( i[0], i[1] );
+		if ( j ) intersections.push( j[0], j[1] );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[0][0], box[0][1], box[3][0], box[3][1] ) );
+		intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[1][0], box[1][1], box[2][0], box[2][1] ) );		
+	}
+	var intersection = [p0_x, p0_y];
+	for ( var n = 0; n < intersections.length; n++ ) {
+		if ( intersections[n] ) {
+			if ( get_distance( intersections[n][0], intersections[n][1], p1_x, p1_y ) < get_distance( intersection[0], intersection[1], p1_x, p1_y ) ) {
+				intersection = intersections[n];
+			}
+		}	
+	}
+	return intersection;
+}
+
+/*
+* Use this when neither of the points are in the capsule.
+*
+*/
+function get_capsule_intersections (p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r) {
+
+	var box = get_parallel_segments( c0_x, c0_y, c1_x, c1_y );
+	var intersections = [];
+	
+	var tmp = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, r );
+	if ( tmp ) intersections.push( tmp[0], tmp[1] );
+	tmp = get_circle_intersections( p0_x, p0_y, p1_x, p1_y, c1_x, c1_y, r );
+	if ( tmp ) intersections.push( tmp[0], tmp[1] );
+	intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[0][0], box[0][1], box[3][0], box[3][1] ) );
+	intersections.push( get_line_intersection( p0_x, p0_y, p1_x, p1_y, box[1][0], box[1][1], box[2][0], box[2][1] ) );
+
+	var intersection0 = [p1_x, p1_y];
+	var intersection1 = [p0_x, p0_y];
+	
+	for ( var n = 0; n < intersections.length; n++ ) {
+		if ( intersections[n] ) {
+			if ( get_distance( intersections[n][0], intersections[n][1], p0_x, p0_y ) < get_distance( intersection0[0], intersection0[1], p0_x, p0_y ) ) {
+				intersection0 = intersections[n];
+			}
+		}
+	}
+	for ( var m = 0; m < intersections.length; m++ ) {
+		if ( intersections[m] ) {
+			if ( get_distance( intersections[m][0], intersections[m][1], p1_x, p1_y ) < get_distance( intersection1[0], intersection1[1], p1_x, p1_y ) ) {
+				intersection1 = intersections[m];
+			}
+		}
+	}
+	if ( intersection0[0] === p1_x && intersection0[1] === p1_y ) return null;
+	else return [intersection0, intersection1];
+}
 	
 	
