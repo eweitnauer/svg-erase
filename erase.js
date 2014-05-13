@@ -16,107 +16,27 @@
 function erase(paths, erase_path, erase_radius) {
 	//erase_radius = 10;
 	/*
-	for ( var s = 0; s < paths.length; s++ ) {
-		
-		if ( paths[s].length > 10 ) {
-				document.write( "s: " + s + " paths[s].length: " + paths[s].length + " paths[s]: <br />" );
-				
-				for ( var s2 = 0; s2 < paths[s].length; s2++ ) {
-					document.write( "s2: " + s2 + " " + paths[s][s2] + ", " );
-					if ( s2 % 10 === 0 ) {
-						document.write( "<br />" );
-					}
-				}
-				
-		}
-		else {
-			
-			document.write( "s: " + s + " paths[s].length: " + paths[s].length + ", paths[s]: " + paths[s] + "<br />" ); 
-		}
-	}
-	for ( var s = 0; s < paths.length; s++ ) {
-		document.write( "path " + s + ": " );
-		for ( var ss = 0; ss < paths[s].length-1; ss++ ) {
-			if ( paths[s][ss][0] === paths[s][ss+1][0] && paths[s][ss][1] === paths[s][ss+1][1] ) {
-				document.write( " same point " );
-			}
-		}
-		document.write( "<br />" );
-	}
-	*/
-	
-	var display_path = function (path) {
-		document.write( "[" );
-		for ( var i = 0; i < path.length; i++ ) {
-			document.write( "[" + path[i][0] + "," + path[i][1] + "], " );
-		}
-		document.write( "]<br />" );
-	}
-	/*
+	document.write( "erase_path: " );
+	display_path( erase_path );
+	document.write( "<br />paths: [" );
 	for ( var i = 0; i < paths.length; i++ ) {
 		display_path( paths[i] );
+		document.write( "<br />" );
 	}
+	document.write( "]<br />" );
 	*/
-	//erase_radius = 6;
+	
+	
 	// The code should iterate over all paths and then call a method that deals with a
 	// single path and the erase_path. Inside that method, we need to iterate over all
 	// line segments of the path paired with all line segments of the erase_path and
 	// call a method for each that handles intersecting two lines (or rather, a line with
 	// a line that has a radius == a capsule).
-    
-	//document.write( "paths: " + paths + "<br />" );
-	//document.write( "erase_path: " + erase_path + "<br />" );
+ 
 	var new_paths = [];
-	/*
-	var handle_erase_clean = function(e_path) {
-		var clean_erase = [];
-		// no repeated points with a single point path
-		if ( e_path.length === 1 ) {
-			clean_erase = e_path;
-		}
-		else {
-			var eClean = 0;
-			while ( eClean < (e_path.length-1) ) {
-				// put non-unique points into clean_erase(_path)
-				if ( e_path[eClean][0] !== e_path[eClean+1][0] || e_path[eClean][1] !== e_path[eClean+1][1] ) {
-					clean_erase.push( e_path[eClean] );
-			    }
-				eClean++;
-			}
-			// this occurs if all points in path were the same
-			if ( e_path.length !== 0 && clean_erase.length === 0 ) {
-				clean_erase.push( e_path[0] );
-			}
-			// to get the last point from e_path
-			if ( e_path[e_path.length-1][0] !== e_path[clean_erase.length-1][0] || e_path[e_path.length-1][1] !== e_path[clean_erase.length-1][1] ) {
-				clean_erase.push( e_path[eClean] );
-			}
-		}
-		return clean_erase;
-	}
-	*/
-	var handle_path_clean = function( path ) {
-		var clean_path = [];
-		if ( path.length === 1 ) {
-			clean_path = path;
-		}
-		else {
-			pClean = 0;
-			while ( pClean < (path.length-1) ) {
-				if ( path[pClean][0] !== path[pClean+1][0] || path[pClean][1] !== path[pClean+1][1] ) {
-					clean_path.push( path[pClean] );
-				}
-				pClean++;
-			}
-			if ( path.length !== 0 && clean_path.length === 0 ) {
-				clean_erase.push( path[0] );
-			}
-			if ( path[path.length-1][0] !== path[clean_path.length-1][0] || path[path.length-1][1] !== path[clean_path.length-1][1] ) {
-				clean_path.push( path[pClean] );
-		    }
-		}
-		return clean_path;
-	}
+	//paths = [[[50, 50],[50,200]], [[100, 50],[100, 200]], [[200, 50],[200, 200]]];
+	//erase_path = [[40, 100],[75, 150],[150, 100],[230, 80]];
+	erase_radius = 20;
 	
 	var handle_point_erase = function(path) {
 		
@@ -142,25 +62,28 @@ function erase(paths, erase_path, erase_radius) {
 			else if ( within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
 					  !within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
 				var x = get_circle_intersection( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
-				path[i] = x;
-				last = i;
+				if ( x ) {
+					path[i] = x;
+					last = i;
+				}
+				else {
+					i++;
+				}
 			}
 			else if ( !within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
 					  within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
 				var x = get_circle_intersection( path[i+1][0], path[i+1][1], path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius );
-				//new_paths.push( path.slice( last, i+1 ).push( x ) );
-				//new_paths.push( get_elements( path, last, i+1 ).push( x ) );
-				new_path = get_elements( path, last, i+1 );
-				new_path.push( x );
-				new_paths.push( new_path );
+				if ( x ) {
+					new_path = get_elements( path, last, i+1 );
+					new_path.push( x );
+					new_paths.push( new_path );
+				}
 				i++;
 				last = i;
 			}
 			else {
 				var poss_intersects = get_circle_intersections( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
 				if ( poss_intersects ) {
-					//new_paths.push( path.slice( last, i+1 ).push( poss_intersects[0] ) );
-					//new_paths.push( get_elements( path, last, i+1 ).push( poss_intersects[0] ) );
 					new_path = get_elements( path, last, i+1 );
 					new_path.push( poss_intersects[0] );
 					new_paths.push( new_path );
@@ -174,7 +97,9 @@ function erase(paths, erase_path, erase_radius) {
 		}
 		if ( last !== i ) {
 			new_path = get_elements( path, last, path.length );
-			new_paths.push( new_path );
+			if ( new_path ) {
+				new_paths.push( new_path );
+			}
 		}
 	} // end handle_point_erase
 	
@@ -185,13 +110,10 @@ function erase(paths, erase_path, erase_radius) {
 		var i = 0;
 		var last = 0;
 		
-		//document.write ( "*** " + path + " ***" );
-		
 		// handle point path
 		if ( path.length === 1 ) {
 			var code = within_capsule( path[0][0], path[0][1], e0[0], e0[1], e1[0], e1[1], erase_radius );
 			if ( code.indexOf( 1 ) !== -1 ) {
-				//document.write( "point path pushed: " + path + "<br />" );
 				new_paths.push( path );
 				return;
 			}
@@ -209,14 +131,21 @@ function erase(paths, erase_path, erase_radius) {
 			}
 			else if ( code0.indexOf( 1 ) !== -1 && code1.indexOf( 1 ) === -1 ) {
 				var x = get_capsule_intersection( p0[0], p0[1], code0, p1[0], p1[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
-				path[i] = x;
-				last = i;
+				if ( x ) {
+					path[i] = x;
+					last = i;
+				}
+				else {
+					i++;
+				}
 			}
 			else if ( code0.indexOf( 1 ) === -1 && code1.indexOf( 1 ) !== -1 ) {
 				var x = get_capsule_intersection( p1[0], p1[0], code1, p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
-				new_path = get_elements( path, last, i+1 );
-				new_path.push( x );
-				new_paths.push( new_path );
+				if ( x ) {
+					new_path = get_elements( path, last, i+1 );
+					new_path.push( x );
+					new_paths.push( new_path );
+				}
 				i++;
 				last = i;
 			}
@@ -236,64 +165,55 @@ function erase(paths, erase_path, erase_radius) {
 		}
 		if ( last !== i ) {
 			new_path = get_elements( path, last, path.length );
-			new_paths.push( new_path );
+			if ( new_path ) {
+				new_paths.push( new_path );
+			}
 		}
 	} // end handle_capsule_erase
-	/*
+	
+	
+	// main
 	if ( erase_path.length === 1 ) {
 		for ( var p = 0; p < paths.length; p++ ) {
 			handle_point_erase( paths[p] );
 		}
 	}
 	else {
-		//document.write( "<br />" + erase_path );
-		erase_path = handle_path_clean( erase_path );
-		//document.write( "<br />" + erase_path );
-		
+		erase_path = clean_path( erase_path );
+				
 		for ( var e = 0; e < (erase_path.length - 1); e++ ) {
-			
 			for ( var p = 0; p < paths.length; p++ ) {
 				handle_capsule_erase( paths[p], e );
 			}
 			paths = new_paths;
 			new_paths = [];
-			
-			document.write( e + " " );
 		}
 		
 	}
-	*/
+	
+	
+	//paths = [[[100,50],[194,50]],[[206,50],[300,50]],[[727,152], [727,151], [725,150], [721,148], [713,144], [704,140], [692,137], [678,135], [667,134], [656,134], [646,134], [635,137], [625,142], [615,148], [606,156.25]]];
+	
+	//paths = [[[84, 100],[91, 100]],[[111, 100],[116, 100],[116, 120],[100, 120],[100, 105]],[[100, 95],[100, 80],[80, 80],[95.08452405257735, 95.08452405257735]],[[105, 105],[120, 120]],]
+	//paths = [[[727, 152],[727, 151],[725, 150],[721, 148],[713, 144],[704, 140],[692, 137],[678, 135],[667, 134],[656, 134],[646, 134],[635, 137],[625, 142],[615, 148],[606, 156.25]], [[594, 170],[594, 170],[585, 181],[582, 193],[577, 210],[572, 232],[567, 266],[563, 296],[563, 319],[567, 338],[573, 353],[582, 367],[591, 377],[594, 380.9]], [[606, 392.85714285714283],[615, 398],[628, 406],[642, 411],[660, 415],[677, 417],[692, 417],[707, 417],[724, 413],[743, 407],[758, 399],[769, 388],[775, 378],[781, 365],[785, 351],[790, 335],[794, 323],[794, 312],[794, 302],[791, 293],[786, 283],[782, 276],[776, 270],[771, 264],[763, 261],[750, 256],[731, 252],[713, 244],[693, 240],[670, 238],[650, 237],[638, 237],[628, 239],[621, 244],[616, 249],[611, 257],[606, 264.14285714285717]], [[606, 341.57142857142856],[608, 345],[619, 361],[630, 371],[639, 381],[648, 388],[656, 393],[666, 397],[673, 398],[684, 399],[696, 400],[705, 399],[716, 393],[724, 386],[730, 378],[734, 370],[737, 363],[737, 357],[737, 350],[737, 341],[734, 335],[728, 327],[723, 324],[715, 321],[709, 320],[700, 320],[693, 320],[685, 321],[678, 324],[672, 326],[667, 328],[666, 329],[666, 330]]];
+	
+	// round all values
+	/*
 	for ( var r = 0; r < paths.length; r++ ) {
 		for ( var rr = 0; rr < paths[r].length; rr++ ) {
 			paths[r][rr][0] = Math.round( paths[r][rr][0] );
 			paths[r][rr][1] = Math.round( paths[r][rr][1] );
 		}
 	}
-	
-	/*
-	document.write( "<br />" );
-	for ( var s = 0; s < paths.length; s++ ) {
-		
-		if ( paths[s].length > 10 ) {
-				document.write( "s: " + s + " paths[s].length: " + paths[s].length + " paths[s]: <br />" );
-				
-				for ( var s2 = 0; s2 < paths[s].length; s2++ ) {
-					document.write( "s2: " + s2 + " " + paths[s][s2] + ", " );
-					if ( s2 % 10 === 0 ) {
-						document.write( "<br />" );
-					}
-				}
-				
-		}
-		else {
-			
-			document.write( "s: " + s + " paths[s].length: " + paths[s].length + ", paths[s]: " + paths[s] + "<br />" ); 
-		}
-	}
 	*/
-	//document.write( "<br />check" );
-	//document.write( "<br /><br />" + paths );
-	paths = [[[100,50],[194,50]],[[206,50],[300,50]],[[727,152], [727,151], [725,150], [721,148], [713,144], [704,140], [692,137], [678,135], [667,134], [656,134], [646,134], [635,137], [625,142], [615,148], [603,603] ]];
+	/*
+	document.write( "[" );
+	for ( var x = 0; x < paths.length; x++ ) {
+		display_path( paths[x] );
+		document.write( "<br />" );
+	}
+	document.write( "]<br />" );
+	*/
 	return paths;
 } // end erase
 
@@ -310,6 +230,37 @@ function erase(paths, erase_path, erase_radius) {
 *  get_capsule_intersection (p0_x, p0_y, code, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r)
 *  get_capsule_intersections (p0_x, p0_y, p1_x, p1_y, c0_x, c0_y, c1_x, c1_y, r)
 */
+
+function display_path (path) {
+		document.write( "[" );
+		for ( var i = 0; i < path.length; i++ ) {
+			document.write( "[" + path[i][0] + "," + path[i][1] + "]," );
+		}
+		document.write( "], " );
+}
+
+function clean_path (path) {
+	var cleaned = [];
+	if ( path.length === 1 ) {
+		cleaned = path;
+	}
+	else {
+		pClean = 0;
+		while ( pClean < (path.length-1) ) {
+			if ( path[pClean][0] !== path[pClean+1][0] || path[pClean][1] !== path[pClean+1][1] ) {
+				cleaned.push( path[pClean] );
+			}
+			pClean++;
+		}
+		if ( path.length !== 0 && cleaned.length === 0 ) {
+			cleaned.push( path[0] );
+		}
+		if ( path[path.length-1][0] !== path[cleaned.length-1][0] || path[path.length-1][1] !== path[cleaned.length-1][1] ) {
+			cleaned.push( path[pClean] );
+	    }
+	}
+	return cleaned;
+}
 
 function get_elements (arr, begin, end) {
 	var elements = [];
@@ -524,6 +475,7 @@ function get_capsule_intersection (p0_x, p0_y, code, p1_x, p1_y, c0_x, c0_y, c1_
 			}
 		}	
 	}
+	if ( intersection[0] === p0_x && intersection[1] === p0_y ) return null;
 	return intersection;
 }
 
