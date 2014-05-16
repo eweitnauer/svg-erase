@@ -13,46 +13,47 @@
 	/ radius of the actual paths that are to be erased is zero.
 */
 
+/*
+TODO:
+-write signature stuff at top
+-finish logging comments, email to me, line numbers
+-get point erasing to work
+-read style guide, conform to those standards
+-write good comments inside and outside functions
+-profile for time
+
+
+*/
+
+
 function erase(paths, erase_path, erase_radius) {
-	//erase_radius = 10;
-	/*
-	document.write( "erase_path: " );
-	display_path( erase_path );
-	document.write( "<br />paths: [" );
-	for ( var i = 0; i < paths.length; i++ ) {
-		display_path( paths[i] );
-		document.write( "<br />" );
-	}
-	document.write( "]<br />" );
-	*/
 	
-	
-	// The code should iterate over all paths and then call a method that deals with a
-	// single path and the erase_path. Inside that method, we need to iterate over all
-	// line segments of the path paired with all line segments of the erase_path and
-	// call a method for each that handles intersecting two lines (or rather, a line with
-	// a line that has a radius == a capsule).
- 
-	var new_paths = [];
-	//paths = [[[50, 50],[50,200]], [[100, 50],[100, 200]], [[200, 50],[200, 200]]];
-	//erase_path = [[40, 100],[75, 150],[150, 100],[230, 80]];
-	//paths = [[[100,50],[300,50]]]; 
-	//erase_path = [[192,33],[192,36],[189,48],[187,62],[187,71]];
-	//paths = [[[727,152],[727,151],[725,150],[721,148],[713,144],[704,140],[692,137],[678,135],[667,134],[656,134],[646,134],[635,137],[625,142],[615,148],[603,159],[594,170],[585,181],[582,193],[577,210],[572,232],[567,266],[563,296],[563,319],[567,338],[573,353],[582,367],[591,377],[601,390],[615,398],[628,406],[642,411],[660,415],[677,417],[692,417],[707,417],[724,413],[743,407],[758,399],[769,388],[775,378],[781,365],[785,351],[790,335],[794,323],[794,312],[794,302],[791,293],[786,283],[782,276],[776,270],[771,264],[763,261],[750,256],[731,252],[713,244],[693,240],[670,238],[650,237],[638,237],[628,239],[621,244],[616,249],[611,257],[604,267],[601,277],[598,288],[598,301],[598,317],[601,333],[608,345],[619,361],[630,371],[639,381],[648,388],[656,393],[666,397],[673,398],[684,399],[696,400],[705,399],[716,393],[724,386],[730,378],[734,370],[737,363],[737,357],[737,350],[737,341],[734,335],[728,327],[723,324],[715,321],[709,320],[700,320],[693,320],[685,321],[678,324],[672,326],[667,328],[666,329],[666,330]]];
-	//erase_path = [[491,248],[494,247],[532,247],[583,268],[615,288],[663,310],[708,321],[720,321],[781,313],[808,293],[818,283],[847,269],[854,267]];
 	erase_radius = 20;
+	
+	//paths = [[[50,100],[50,300]]];
+	//erase_path = [[92,227],[90,228],[90,228],[88,232],[86,235],[79,244],[76,247],[68,256],[67,259],[61,265],[54,270],[51,274],[47,276],[45,276],[42,276],[38,275],[36,273],[35,272],[34,271],[33,270],[29,265],[26,255],[24,247],[24,237],[27,217],[38,194],[45,183],[50,174],[56,166],[60,157],[60,157],[69,143],[71,140],[71,140]];
+	/*
+	* To get test case: uncomment this block and the block from line <num> to <num>.
+	*/
+	console.log( "erase radius: " + erase_radius );
+	console.log( "erase path:" );
+	log_path( erase_path, 1 );
+	console.log( "paths:" );
+	log_paths( paths );
+	/**/
+	
+	var new_paths = [];
 		
-	
-	
-	
 	var handle_point_erase = function(path) {
+		var eX = erase_path[0][0];
+		var eY = erase_path[0][1];
 		
 		var i = 0;
 		var last = 0;
 	
 		// handle point path
 		if ( path.length === 1 ) {
-			if ( !within_circle( path[0][0], path[0][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+			if ( !within_circle( path[0][0], path[0][1], eX, eY, erase_radius ) ) {
 				new_paths.push( path );
 				return;
 			}
@@ -60,15 +61,17 @@ function erase(paths, erase_path, erase_radius) {
 		
 		var new_path;
 		while ( i < (path.length - 1) ) {
+			var p0 = path[i];
+			var p1 = path[i+1];
+			var code0 = within_circle( p0[0], p0[1], eX, eY, erase_radius );
+			var code1 = within_circle( p1[0], p1[1], eX, eY, erase_radius );
 		
-			if ( within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
-				 within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
+			if ( code0 && code1 ) {
 				i++;
 				last = i;
 			}
-			else if ( within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
-					  !within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
-				var x = get_circle_intersection( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
+			else if ( code0 && !code1 ) {
+				var x = get_circle_intersection( p0[0], p0[1], p1[0], p1[1], eX, eY, erase_radius );
 				if ( x ) {
 					path[i] = x;
 					last = i;
@@ -77,9 +80,8 @@ function erase(paths, erase_path, erase_radius) {
 					i++;
 				}
 			}
-			else if ( !within_circle( path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius ) &&
-					  within_circle( path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius ) ) {
-				var x = get_circle_intersection( path[i+1][0], path[i+1][1], path[i][0], path[i][1], erase_path[0][0], erase_path[0][1], erase_radius );
+			else if ( !code0 && code1 ) {
+				var x = get_circle_intersection( p1[0], p1[1], p0[0], p0[1], eX, eY, erase_radius );
 				if ( x ) {
 					new_path = get_elements( path, last, i+1 );
 					new_path.push( x );
@@ -89,7 +91,7 @@ function erase(paths, erase_path, erase_radius) {
 				last = i;
 			}
 			else {
-				var poss_intersects = get_circle_intersections( path[i][0], path[i][1], path[i+1][0], path[i+1][1], erase_path[0][0], erase_path[0][1], erase_radius );
+				var poss_intersects = get_circle_intersections( p0[0], p0[1], p1[0], p1[1], eX, eY, erase_radius );
 				if ( poss_intersects ) {
 					new_path = get_elements( path, last, i+1 );
 					new_path.push( poss_intersects[0] );
@@ -109,7 +111,7 @@ function erase(paths, erase_path, erase_radius) {
 			}
 		}
 	} // end handle_point_erase
-	
+		
 	var handle_capsule_erase = function(path, i) {
 		var e0 = erase_path[i];
 		var e1 = erase_path[i+1];
@@ -120,7 +122,7 @@ function erase(paths, erase_path, erase_radius) {
 		// handle point path
 		if ( path.length === 1 ) {
 			var code = within_capsule( path[0][0], path[0][1], e0[0], e0[1], e1[0], e1[1], erase_radius );
-			if ( code.indexOf( 1 ) !== -1 ) {
+			if ( code.indexOf( 1 ) === -1 ) {
 				new_paths.push( path );
 				return;
 			}
@@ -147,14 +149,25 @@ function erase(paths, erase_path, erase_radius) {
 				}
 			}
 			else if ( code0.indexOf( 1 ) === -1 && code1.indexOf( 1 ) !== -1 ) {
-				var x = get_capsule_intersection( p1[0], p1[1], code1, p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+				/* var x = get_capsule_intersection( p1[0], p1[1], code1, p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
 				if ( x ) {
 					new_path = get_elements( path, last, i+1 );
 					new_path.push( x );
 					new_paths.push( new_path );
 				}
 				i++;
-				last = i;
+				last = i; */
+				var x = get_capsule_intersection( p1[0], p1[1], code1, p0[0], p0[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
+				if ( x ) {
+					new_path = get_elements( path, last, i+1 );
+					new_path.push( x );
+					new_paths.push( new_path );
+					i++;
+					last = i;
+				}
+				else {
+					i++;
+				}
 			}
 			else {
 				var poss_intersects = get_capsule_intersections( p0[0], p0[1], p1[0], p1[1], e0[0], e0[1], e1[0], e1[1], erase_radius );
@@ -178,16 +191,15 @@ function erase(paths, erase_path, erase_radius) {
 		}
 	} // end handle_capsule_erase
 	
-	
 	// main
+	erase_path = clean_path( erase_path );
 	if ( erase_path.length === 1 ) {
 		for ( var p = 0; p < paths.length; p++ ) {
 			handle_point_erase( paths[p] );
+			paths = new_paths;
 		}
 	}
 	else {
-		erase_path = clean_path( erase_path );
-				
 		for ( var e = 0; e < (erase_path.length - 1); e++ ) {
 			for ( var p = 0; p < paths.length; p++ ) {
 				handle_capsule_erase( paths[p], e );
@@ -195,45 +207,25 @@ function erase(paths, erase_path, erase_radius) {
 			paths = new_paths;
 			new_paths = [];
 		}
-		
 	} // end main
 	
-	//display_paths( paths );
-	
-	//paths = [[[100,50],[194,50]],[[206,50],[300,50]],[[727,152], [727,151], [725,150], [721,148], [713,144], [704,140], [692,137], [678,135], [667,134], [656,134], [646,134], [635,137], [625,142], [615,148], [606,156.25]]];
-	
-	//paths = [[[84, 100],[91, 100]],[[111, 100],[116, 100],[116, 120],[100, 120],[100, 105]],[[100, 95],[100, 80],[80, 80],[95.08452405257735, 95.08452405257735]],[[105, 105],[120, 120]],]
-	//paths = [[[727, 152],[727, 151],[725, 150],[721, 148],[713, 144],[704, 140],[692, 137],[678, 135],[667, 134],[656, 134],[646, 134],[635, 137],[625, 142],[615, 148],[606, 156.25]], [[594, 170],[594, 170],[585, 181],[582, 193],[577, 210],[572, 232],[567, 266],[563, 296],[563, 319],[567, 338],[573, 353],[582, 367],[591, 377],[594, 380.9]], [[606, 392.85714285714283],[615, 398],[628, 406],[642, 411],[660, 415],[677, 417],[692, 417],[707, 417],[724, 413],[743, 407],[758, 399],[769, 388],[775, 378],[781, 365],[785, 351],[790, 335],[794, 323],[794, 312],[794, 302],[791, 293],[786, 283],[782, 276],[776, 270],[771, 264],[763, 261],[750, 256],[731, 252],[713, 244],[693, 240],[670, 238],[650, 237],[638, 237],[628, 239],[621, 244],[616, 249],[611, 257],[606, 264.14285714285717]], [[606, 341.57142857142856],[608, 345],[619, 361],[630, 371],[639, 381],[648, 388],[656, 393],[666, 397],[673, 398],[684, 399],[696, 400],[705, 399],[716, 393],[724, 386],[730, 378],[734, 370],[737, 363],[737, 357],[737, 350],[737, 341],[734, 335],[728, 327],[723, 324],[715, 321],[709, 320],[700, 320],[693, 320],[685, 321],[678, 324],[672, 326],[667, 328],[666, 329],[666, 330]]];
-	
-	// round all values
-	
+	// round all coordinates	
 	for ( var r = 0; r < paths.length; r++ ) {
 		for ( var rr = 0; rr < paths[r].length; rr++ ) {
 			paths[r][rr][0] = Math.round( paths[r][rr][0] );
 			paths[r][rr][1] = Math.round( paths[r][rr][1] );
 		}
 	}
+	
 	/*
-	document.write( "[" );
-	for ( var s = 0; s < paths.length; s++ ) {
-		display_path( paths[s] );
-		document.write( "<br />" );
-	}
-	document.write( "]<br />" );
-	document.write( "erase_path: <br />" );
-	display_path( erase_path );
-    */
-	/*
-	document.write( "[" );
-	for ( var x = 0; x < paths.length; x++ ) {
-		display_path( paths[x] );
-		document.write( "<br />" );
-	}
-	document.write( "]<br />" );
+	* To get test case: uncomment this block and the block from line <num> to <num>.
 	*/
-	//paths = [[[100,50],[165.1027335274917,50]],[[205.720795884273,50],[300,50]]];
-	//paths = [[[727,152],[727,151],[725,150],[721,148],[713,144],[704,140],[692,137],[678,135],[667,134],[656,134],[646,134],[635,137],[625,142],[615,148],[603,159],[594,170],[585,181],[582,193],[578,207]],[[631,238],[629,239]],[[602,272],[601,277],[598,288],[598,301],[598,317],[601,333],[608,345],[619,361],[630,371],[639,381],[648,388],[656,393],[666,397],[673,398],[684,399],[696,400],[705,399],[716,393],[724,386],[730,378],[734,370],[737,363],[737,357],[737,350],[737,341],[734,335],[728,327],[723,324],[715,321],[709,320],[700,320],[693,320],[685,321],[678,324],[672,326],[667,328],[666,329],[666,330]]];
-
+	console.log( "erase path (cleaned):" );
+	log_path( erase_path, 1 );
+	console.log( "paths:" );
+	log_paths( paths );
+	/**/
+	
 	return paths;
 } // end erase
 
@@ -255,19 +247,53 @@ function erase(paths, erase_path, erase_radius) {
 
 function display_path (path) {
 		document.write( "[" );
-		for ( var i = 0; i < path.length; i++ ) {
+		for ( var i = 0; i < path.length-1; i++ ) {
 			document.write( "[" + path[i][0] + "," + path[i][1] + "]," );
 		}
-		document.write( "], " );
+		document.write( "[" + path[i][0] + "," + path[i][1] + "]" );
+		document.write( "]" );
 }
 
 function display_paths (paths) {
 	document.write( "[" );
-	for ( var x = 0; x < paths.length; x++ ) {
-		display_path( paths[x] );
-		document.write( "<br />" );
+	for ( var i = 0; i < paths.length-1; i++ ) {
+		display_path( paths[i] );
+		document.write( ",<br />" );
 	}
-	document.write( "]<br />" );
+	display_path( paths[i] );
+	document.write( "]" );
+}
+
+function log_path (path, display_switch) {
+	var log = "";
+	log += "[";
+	for ( var i = 0; i < path.length-1; i++ ) {
+		log += "[" + path[i][0] + "," + path[i][1] + "],";
+	}
+	log += "[" + path[i][0] + "," + path[i][1] + "]";
+	log += "]";
+	
+	// log path to console
+	if ( display_switch ) {
+		console.log( log );
+	}
+	// return string for use elsewhere
+	else {
+		return log;
+	}
+}
+
+function log_paths (paths) {
+	log = "";
+	log += "[";
+	for ( var i = 0; i < paths.length-1; i++ ) {
+		log += log_path( paths[i], 0 );
+		log += ",";
+	}
+	log += log_path( paths[i], 0 );
+	log += "]";
+	
+	console.log( log );
 }
 
 function clean_path (path) {
@@ -393,6 +419,8 @@ function get_circle_intersection (a_x, a_y, b_x, b_y, c_x, c_y, r) {
 	var vec_ac = [ (c_x - a_x), (c_y - a_y) ];
 	var vec_ab = [ (b_x - a_x), (b_y - a_y) ];
 	
+	//if ( get_distance( a_x, a_y, c_x, c_y ) === r ) return null;
+	
 	var mag_ab = Math.sqrt( Math.pow( vec_ab[0], 2 ) + Math.pow( vec_ab[1], 2 ) );
 	var u_vec_ab = [ (vec_ab[0]/mag_ab), (vec_ab[1]/mag_ab) ];
 	var ac_proj_ab = vec_ac[0]*u_vec_ab[0] + vec_ac[1]*u_vec_ab[1];
@@ -407,6 +435,8 @@ function get_circle_intersection (a_x, a_y, b_x, b_y, c_x, c_y, r) {
 		var b = Math.sqrt( Math.pow( r, 2 ) - Math.pow( dist_c_to_right_point, 2 ) );
 	}
 	var intersection = [ (a_x + ac_proj_ab*u_vec_ab[0] + b*u_vec_ab[0]), (a_y + ac_proj_ab*u_vec_ab[1] + b*u_vec_ab[1]) ];
+	
+	if ( a_x === intersection[0] && a_y === intersection[1] ) return null;
 	return intersection;
 }
 
@@ -415,12 +445,32 @@ function get_circle_intersections (a_x, a_y, b_x, b_y, c_x, c_y, r) {
 	var vec_ac = [ (c_x - a_x), (c_y - a_y) ];
 	var vec_ab = [ (b_x - a_x), (b_y - a_y) ];
 	
+	var dist_ac = get_distance( a_x, a_y, c_x, c_y );
+	var dist_bc = get_distance( b_x, b_y, c_x, c_y );
+	
+	/*
+	if ( a_x < b_x ) {
+		if ( c_x <= a_x ) {
+			return null;
+		}
+	}
+	else {
+		if ( c_x <= b_x ) {
+			return null;
+		}
+	}
+	*/
+	
 	var vec_n = [ -vec_ab[1], vec_ab[0] ];
 	var mag_n = Math.sqrt( Math.pow( vec_n[0], 2 ) + Math.pow( vec_n[1], 2 ) );
 	var u_vec_n = [vec_n[0]/mag_n, vec_n[1]/mag_n];
 	
 	var mag_d = vec_ac[0]*u_vec_n[0] + vec_ac[1]*u_vec_n[1];
 	if ( Math.abs(mag_d) >= r ) return null;
+	else {
+		if ( (a_x <= c_x && b_x <= c_x) || (a_x >= c_x && b_x >= c_x) ) return null; 
+	}
+	 
 	
 	var x = Math.sqrt( Math.pow( r, 2 ) - Math.pow( mag_d, 2 ) );
 	var vec_cd = [ (c_x - mag_d*u_vec_n[0]), (c_y - mag_d*u_vec_n[1]) ];
@@ -429,6 +479,10 @@ function get_circle_intersections (a_x, a_y, b_x, b_y, c_x, c_y, r) {
 	var u_vec_ab = [ (vec_ab[0]/mag_ab), (vec_ab[1]/mag_ab) ];
 	
 	var intersections = [[(vec_cd[0] - u_vec_ab[0]*x), (vec_cd[1] - u_vec_ab[1]*x)], [(vec_cd[0] + u_vec_ab[0]*x), (vec_cd[1] + u_vec_ab[1]*x)]];
+	
+	
+	if ( (intersections[1][0] === a_x && intersections[1][1] === a_y)   
+		 || (intersections[0][0] === b_x && intersections[0][1] === b_y) ) return null;	
 	return intersections;
 }
 
