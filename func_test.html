@@ -10,17 +10,65 @@
 	<script>
 
 	var test_cases = [];
-
+	
  	test_cases.push({
-		name: 'cut middle with circle (vertical)'
+		name: 'circle - cut middle - vertical path'
 	 ,paths: [[[0,0],[0,40]]]
 	 ,erase_path: [[0,20]]
 	 ,r: 10
 	 ,result: [[[0,0],[0,10]], [[0,30],[0,40]]]
 	});
+	
+	test_cases.push({
+		name: 'circle - cut start - vertical path'
+	 ,paths: [[[0,0],[0,40]]]
+	 ,erase_path: [[0,0]]
+	 ,r: 10
+	 ,result: [[[0,10],[0,40]]]
+	});
+	
+	test_cases.push({
+		name: 'circle - cut start - vertical path - edge case'
+	 ,paths: [[[0,0],[0,40]]]
+	 ,erase_path: [[0,10]]
+	 ,r: 10
+	 ,result: [[[0,20],[0,40]]]
+	});
+	
+	test_cases.push({
+		name: 'circle - cut start - vertical path - edge case - extended head'
+	 ,paths: [[[0,0],[0,40],[0,80]]]
+	 ,erase_path: [[0,10]]
+	 ,r: 10
+	 ,result: [[[0,20],[0,40],[0,80]]]
+	});
+	
+	test_cases.push({
+		name: 'circle - cut end - vertical path'
+	 ,paths: [[[0,0],[0,40]]]
+	 ,erase_path: [[0,40]]
+	 ,r: 10
+	 ,result: [[[0,0],[0,30]]]
+	});
+	
+	test_cases.push({
+		name: 'circle - cut end - vertical path - edge case'
+	 ,paths: [[[0,0],[0,40]]]
+	 ,erase_path: [[0,30]]
+	 ,r: 10
+	 ,result: [[[0,0],[0,20]]]
+	});
+	
+	test_cases.push({
+		name: 'circle - cut end - vertical path - edge case - extended tail'
+	 ,paths: [[[0,0],[0,40],[0,80]]]
+	 ,erase_path: [[0,30]]
+	 ,r: 10
+	 ,result: [[[0,0],[0,20]],[[0,40],[0,80]]]
+	});
 
 	test_cases.push({
-		name: 'cut middle with circle'
+		name: 'circle - cut middle - horiz path'
 	 ,paths: [[[0,0],[40,0]]]
 	 ,erase_path: [[20,0]]
 	 ,r: 10
@@ -28,7 +76,7 @@
 	});
 
 	test_cases.push({
-		name: 'cut start with circle'
+		name: 'circle - cut start - horiz path'
 	 ,paths: [[[0,0],[40,0]]]
 	 ,erase_path: [[0,0]]
 	 ,r: 10
@@ -36,30 +84,206 @@
 	});
 
 	test_cases.push({
-	  name: 'border case cut start with circle'
+		name: 'circle - cut start - horiz path - extended tail'
+	 ,paths: [[[0,0],[40,0],[80,0],[120,0]]]
+	 ,erase_path: [[0,0]]
+	 ,r: 10
+	 ,result: [[[10,0],[40,0],[80,0],[120,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'circle - cut start - horiz path - edge case'
 	 ,paths: [[[0,0],[40,0]]]
 	 ,erase_path: [[10,0]]
 	 ,r: 10
-	 ,result: [[[0,0],[0,0]],[[20,0],[40,0]]]
+	 ,result: [[[20,0],[40,0]]]
 	});
 
 	test_cases.push({
-	  name: 'cut end with circle'
-	 ,paths: [[[0,0],[40,0]]]
-	 ,erase_path: [[30,0]]
+	  name: 'circle - cut start - horiz path - edge case - extended tail'
+	 ,paths: [[[0,0],[40,0],[80,0],[120,0]]]
+	 ,erase_path: [[10,0]]
 	 ,r: 10
-	 ,result: [[[0,0],[20,0]],[[40,0],[40,0]]]
+	 ,result: [[[20,0],[40,0],[80,0],[120,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'circle - cut start - horiz path - edge case - extended head'
+	 ,paths: [[[0,0],[40,0],[80,0],[120,0]]]
+	 ,erase_path: [[50,0]]
+	 ,r: 10
+	 ,result: [[[0,0],[40,0]],[[60,0],[80,0],[120,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'circle - cut end - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[40,0]]
+	 ,r: 10
+	 ,result: [[[0,0],[30,0]]]
 	});
 
 	test_cases.push({
-	  name: 'border case cut end with circle'
+	  name: 'circle - cut end - horiz path - edge case'
 	 ,paths: [[[0,0],[40,0]]]
 	 ,erase_path: [[30,0]]
 	 ,r: 10
-	 ,result: [[[0,0],[20,0]],[[40,0],[40,0]]]
+	 ,result: [[[0,0],[20,0]]]
 	});
+	
+	test_cases.push({
+	  name: 'circle - cut end - horiz path - edge case - extended tail'
+	 ,paths: [[[0,0],[40,0],[80,0]]]
+	 ,erase_path: [[30,0]]
+	 ,r: 10
+	 ,result: [[[0,0],[20,0]],[[40,0],[80,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'horiz capsule - cut middle - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[25,0],[30,0]]
+	 ,r: 5
+	 ,result: [[[0,0],[20,0]],[[35,0],[40,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'horiz capsule - cut end - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[25,0],[35,0]]
+	 ,r: 10
+	 ,result: [[[0,0],[15,0]]]
+	});
+	
+	test_cases.push({
+	  name: 'horiz capsule - cut end - edge case - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[20,0],[40,0]]
+	 ,r: 10
+	 ,result: [[[0,0],[10,0]]]
+	 })
 
-
+	test_cases.push({
+	  name: 'horiz capsule - cut start - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[0,0],[10,0]]
+	 ,r: 10
+	 ,result: [[[20,0],[40,0]]]
+	})
+	
+	test_cases.push({
+	  name: 'horiz capsule - cut start - edge case - horiz path'
+	 ,paths: [[[0,0],[40,0]]]
+	 ,erase_path: [[10,0],[20,0]]
+	 ,r: 10
+	 ,result: [[[30,0],[40,0]]]
+	})
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut middle - horiz path'
+	 ,paths: [[[0,20],[40,20]]]
+	 ,erase_path: [[20,10],[20,30]]
+	 ,r: 5
+	 ,result: [[[0,20],[15,20]],[[25,20],[40,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut start - horiz path'
+	 ,paths: [[[0,20],[40,20]]]
+	 ,erase_path: [[0,10],[0,30]]
+	 ,r: 10
+	 ,result: [[[10,20],[40,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut end - horiz path'
+	 ,paths: [[[0,20],[40,20]]]
+	 ,erase_path: [[40,10],[40,30]]
+	 ,r: 10
+	 ,result: [[[0,20],[30,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut start - horiz path - edge case'
+	 ,paths: [[[0,20],[40,20]]]
+	 ,erase_path: [[10,10],[10,30]]
+	 ,r: 10
+	 ,result: [[[20,20],[40,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut end - horiz path - edge case'
+	 ,paths: [[[0,20],[40,20]]]
+	 ,erase_path: [[30,10],[30,30]]
+	 ,r: 10
+	 ,result: [[[0,20],[20,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut end - horiz path - edge case - extended tail'
+	 ,paths: [[[0,20],[40,20],[80,20]]]
+	 ,erase_path: [[30,10],[30,30]]
+	 ,r: 10
+	 ,result: [[[0,20],[20,20]],[[40,20],[80,20]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut middle - vertical path'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[20,15],[20,25]]
+	 ,r: 10
+	 ,result: [[[20,0],[20,5]],[[20,35],[20,40]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut start - vertical path'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[20,0],[20,20]]
+	 ,r: 10
+	 ,result: [[[20,30],[20,40]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut end - vertical path'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[20,20],[20,40]]
+	 ,r: 10
+	 ,result: [[[20,0],[20,10]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut start - vertical path - edge case'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[20,10],[20,20]]
+	 ,r: 10
+	 ,result: [[[20,30],[20,40]]]
+	});
+	
+	test_cases.push({
+	  name: 'vertical capsule - cut end - vertical path - edge case'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[20,20],[20,30]]
+	 ,r: 10
+	 ,result: [[[20,0],[20,10]]]
+	});
+	
+	// weird cases
+	test_cases.push({
+	  name: 'vertical capsule grazing a vertical path'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[10,20],[10,30]]
+	 ,r: 10
+	 ,result: [[[20,0],[20,40]]]
+	});
+	
+	test_cases.push({
+	  name: 'end of capsule grazing a vertical path'
+	 ,paths: [[[20,0],[20,40]]]
+	 ,erase_path: [[25,20],[35,20]]
+	 ,r: 5
+	 ,result: [[[20,0],[20,40]]]
+	});	
+	
 	function array_deep_fequal(a, b) {
 		if (a.length != b.length) return false;
 		for (var i=0; i<a.length; i++) {
@@ -395,7 +619,7 @@
 	*/
 	//var new_paths = handle_path_clean( paths[0] );
 	//erase_path = handle_path_clean( erase_path );
-
+	/*
 	var handle_capsule_erase = function(path, i) {
 		var e0 = erase_path[i];
 		var e1 = erase_path[i+1];
@@ -466,11 +690,13 @@
 			}
 		}
 	} // end handle_capsule_erase
+	*/
 	/*
 	handle_capsule_erase( paths[0], 0 );
 	document.write( "new_paths: " + new_paths + "<br />" );
 	document.write( "erase_path: " + erase_path + "<br />" );
 	*/
+	/*
 	var handle_path_clean = function( path ) {
 		var clean_path = [];
 		if ( path.length === 1 ) {
@@ -493,7 +719,7 @@
 		}
 		return clean_path;
 	}
-
+	*/
 
 	/*
 	// tests of more complicated input
