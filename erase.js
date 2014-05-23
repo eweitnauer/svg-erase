@@ -535,6 +535,7 @@ function getCircleIntersection (aX, aY, bX, bY, cX, cY, r) {
 		var b = Math.sqrt(Math.pow(r, 2) - Math.pow(distCToRightPoint, 2));
 	}
 	var intersection = [(aX + ac_proj_ab*u_vec_ab[0] + b*u_vec_ab[0]), (aY + ac_proj_ab*u_vec_ab[1] + b*u_vec_ab[1])];
+	if ( intersection[0] === aX && intersection[1] === aY ) return null;
 	return intersection;
 }
 
@@ -572,6 +573,7 @@ function getCircleIntersections (aX, aY, bX, bY, cX, cY, r) {
 	var u_vec_ab = [(vec_ab[0]/mag_ab), (vec_ab[1]/mag_ab)];
 
 	var intersections = [[(vec_cd[0] - u_vec_ab[0]*x), (vec_cd[1] - u_vec_ab[1]*x)], [(vec_cd[0] + u_vec_ab[0]*x), (vec_cd[1] + u_vec_ab[1]*x)]];
+	if ( intersections[0][0] === aX && intersections[0][1] === aY ) return null;
 	return intersections;
 }
 
